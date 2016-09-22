@@ -1,0 +1,132 @@
+1) Top 5 employees (employee id and employee name) with highest rating.
+(In case two employees have same rating, employee with name coming first in dictionary should get preference)
+
+Solution
+---------------
+
+Employee_Details = LOAD 'employee_details.txt' USING PigStorage(',') AS (id:int, name:chararray, salary:int, rank:int);
+
+Sorted_Employee_Details = ORDER Employee_Details BY rank DESC, name ASC; 
+
+X = FOREACH Sorted_Employee_Details GENERATE id, name;
+
+TOP_5_Employees_Based_On_Rating = LIMIT X 5;
+
+DUMP TOP_5_Employees_Based_On_Rating;
+
+Output
+---------------
+
+(105,Pawan)
+(110,Priyanka)
+(104,Anubhav)
+(109,Katrina)
+(103,Akshay)
+
+2) Top 3 employees (employee id and employee name) with highest salary, whose employee id is an odd number.
+(In case two employees have same salary, employee with name coming first in dictionary should get preference)
+
+Solution
+---------------
+
+Employee_Details = LOAD 'employee_details.txt' USING PigStorage(',') AS (id:int, name:chararray, salary:int, rank:int);
+
+Employee_Details_With_ODD_IDs = FILTER Employee_Details BY id%2 != 0;
+
+Order_Employee_Details_With_ODD_IDs = ORDER Employee_Details_With_ODD_IDs BY salary DESC, name ASC;
+
+X = FOREACH Order_Employee_Details_With_ODD_IDs GENERATE $0, $1;
+
+TOP_3_Employees = LIMIT X 3;
+
+DUMP TOP_3_Employees;
+
+Output
+---------------
+
+(101,Amitabh)
+(107,Salman)
+(103,Akshay)
+
+3) Employee (employee id and employee name) with maximum expense
+(In case two employees have same expense, employee with name coming first in dictionary should get preference)
+
+Solution
+---------------
+
+Employee_Details = LOAD 'employee_details.txt' USING PigStorage(',') AS (id:int, name:chararray, salary:int, rank:int);
+
+Expensee_Details = LOAD 'employee_expenses.txt' AS (id:int, expense:int);
+
+JOIN_Employee_Expense_Details = JOIN Employee_Details BY id, Expensee_Details BY id;
+
+Sort_Employee_Exepnse_Details_By_Expense = ORDER JOIN_Employee_Expense_Details BY Expensee_Details::expense DESC;
+
+X = FOREACH Sort_Employee_Exepnse_Details_By_Expense GENERATE Employee_Details::id, Employee_Details::name;
+
+TOP_Employee_Details_With_Max_Expense = LIMIT X 1;
+
+DUMP TOP_Employee_Details_With_Max_Expense;
+
+Output
+---------------
+
+(110,Priyanka)
+
+4) List of employees (employee id and employee name) having entries in employee_expenses file.
+
+Solution
+---------------
+
+Employee_Details = LOAD 'employee_details.txt' USING PigStorage(',') AS (id:int, name:chararray, salary:int, rank:int);
+
+Expensee_Details = LOAD 'employee_expenses.txt' AS (id:int, expense:int);
+
+JOIN_RIGHT_Employee_Expense_Details = JOIN Employee_Details BY id RIGHT OUTER, Expensee_Details BY id;
+
+X = FOREACH JOIN_RIGHT_Employee_Expense_Details GENERATE Employee_Details::id, Employee_Details::name;
+
+Employees_with_Expenses = FILTER X BY Employee_Details::id is not null;
+
+DUMP Employees_with_Expenses;
+
+Output
+---------------
+
+(101,Amitabh)
+(101,Amitabh)
+(102,Shahrukh)
+(102,Shahrukh)
+(104,Anubhav)
+(105,Pawan)
+(110,Priyanka)
+(114,Madhuri)
+
+5) List of employees (employee id and employee name) having no entry in employee_expenses file.
+
+Solution
+---------------
+
+Employee_Details = LOAD 'employee_details.txt' USING PigStorage(',') AS (id:int, name:chararray, salary:int, rank:int);
+
+Expensee_Details = LOAD 'employee_expenses.txt' AS (id:int, expense:int);
+
+JOIN_LEFT_Employee_Expense_Details = JOIN Employee_Details BY id LEFT OUTER, Expensee_Details BY id;
+
+Employees_without_Expenses = FILTER JOIN_LEFT_Employee_Expense_Details BY Expensee_Details::id is null;
+
+X = FOREACH Employees_without_Expenses GENERATE Employee_Details::id, Employee_Details::name;
+
+DUMP X;
+
+Output
+---------------
+
+(103,Akshay)
+(106,Aamir)
+(107,Salman)
+(108,Ranbir)
+(109,Katrina)
+(111,Tushar)
+(112,Ajay)
+(113,Jubeen)
